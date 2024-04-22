@@ -156,7 +156,7 @@ def delete_emps():
 
 def sidebar_layout():
     st.sidebar.title("Navegação")
-    page = st.sidebar.radio("Escolha a página", ["Todos os Usuários", "Usuário por ID", "Criar Usuário", "Todas as Bicicletas", "Bicicleta por ID", "Todos os Empréstimos", "Empréstimo por ID", "Criar Empréstimo", "Atualizar Usuário"])
+    page = st.sidebar.radio("Escolha a página", ["Todos os Usuários", "Usuário por ID", "Criar Usuário", "Todas as Bicicletas", "Bicicleta por ID", "Todos os Empréstimos", "Empréstimo por ID", "Criar Empréstimo", "Atualizar Usuário", "Atualizar Bicicleta", "Apagar Empréstimo"])
 
     if page == "Todos os Usuários":
         all_users()
@@ -183,7 +183,10 @@ def sidebar_layout():
         create_emps()
     elif page == "Atualizar Usuário":
         data_user()
-
+    elif page == "Atualizar Bicicleta":
+        data_bike()
+    elif page == "Apagar Empréstimo":
+        delete_emps()
 
 if __name__ == "__main__":
     sidebar_layout()
