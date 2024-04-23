@@ -1,7 +1,9 @@
 import streamlit as st
 import requests
 
-url = "mongodb+srv://admin:admin@projagil.pim4mny.mongodb.net/APS5"
+url = "https://aps-5-rest-mongodb-streamlit-joaodelomo-dmu5.onrender.com/"
+
+##############################################################################################################################################
 
 #USUÁRIOS
 
@@ -39,24 +41,29 @@ def data_user():
         st.table(response.json())
         st.session_state["Usuario"] = response.json()
     if 'Usuario' in st.session_state:
-        usuario = {
-            "nome": st.text_input("Insira o nome do usuário", st.session_state["Usuario"]["nome"]),
-            "cpf": st.text_input("Insira o CPF do usuário", st.session_state["Usuario"]["cpf"]),
-            "data": st.text_input("Insira a data de nasciemto do usuário", st.session_state["Usuario"]["data"]),
-        }
+        usuario = st.session_state["Usuario"]
+        nome = st.text_input("Insira o nome do usuário", usuario.get("nome", ""))
+        cpf = st.text_input("Insira o CPF do usuário", usuario.get("cpf", ""))
+        data = st.text_input("Insira a data de nascimento do usuário", usuario.get("data", ""))
+        
         if st.button("Atualizar"):
-            response = requests.put(f'{url}/usuarios/{id}', json=usuario)
-            if response.status_code == 200:
+            update_data = {"nome": nome, "cpf": cpf, "data": data}
+            response = requests.put(f'{url}/usuarios/{id}', json=update_data)
+            if response.status_code == 201:
                 st.success("Usuário atualizado com sucesso.")
             else:
                 st.error("Erro ao atualizar usuário.")
+
         if st.button("Deletar"):
             response = requests.delete(f'{url}/usuarios/{id}')
             if response.status_code == 200:
+                del st.session_state["Usuario"]  # Limpa o estado após deletar
                 st.success("Usuário deletado com sucesso.")
             else:
                 st.error("Erro ao deletar usuário.")
 
+
+##############################################################################################################################################
 
 #BICICLETAS
 
@@ -77,6 +84,7 @@ def create_bike():
         "marca": st.text_input("Insira a marca da bicicleta", ""),
         "modelo": st.text_input("Insira o modelo da bicicleta", ""),
         "cidade": st.text_input("Insira a cidade da bicicleta", ""),
+        "status": st.text_input("Insira o status da bicicleta", ""),
     }
 
     if st.button("Criar Bicicleta"):
@@ -94,13 +102,14 @@ def data_bike():
         st.session_state["Bicicleta"] = response.json()
     if 'Bicicleta' in st.session_state:
         bike = {
-            "marca": st.text_input("Insira a marca da bicicleta", st.session_state["Bicicleta"]["marca"]),
-            "modelo": st.text_input("Insira o modelo da bicicleta", st.session_state["Bicicleta"]["modelo"]),
-            "cidade": st.text_input("Insira a cidade da bicicleta", st.session_state["Bicicleta"]["cidade"]),
+            "marca": st.text_input("Insira a marca da bicicleta", ""),
+            "modelo": st.text_input("Insira o modelo da bicicleta", ""),
+            "cidade": st.text_input("Insira a cidade da bicicleta", ""),
+            "status": st.text_input("Insira o status da bicicleta", ""),
         }
         if st.button("Atualizar"):
             response = requests.put(f'{url}/bikes/{id}', json=bike)
-            if response.status_code == 200:
+            if response.status_code == 201:
                 st.success("Bicicleta atualizada com sucesso.")
             else:
                 st.error("Erro ao atualizar bicicleta.")
@@ -111,6 +120,8 @@ def data_bike():
             else:
                 st.error("Erro ao deletar bicicleta.")
 
+##############################################################################################################################################
+
 #EMPRÉSTIMOS
 
 def all_emps():
@@ -119,7 +130,7 @@ def all_emps():
         st.table(response.json())
 
 def get_emps_by_id( user_id, bike_id):
-    response = requests.get(f'{url}/emprestimos/usuarios/{user_id}/bikes/{bike_id}')
+    response = requests.get(f'{url}/emprestimos/{user_id}/{bike_id}')
     if response.status_code == 200:
         st.table(response.json())
     else:
@@ -127,36 +138,42 @@ def get_emps_by_id( user_id, bike_id):
 
 def create_emps():
     emps = {
-        "user_id": st.text_input("Insira o ID do usuário", ""),
-        "bike_id": st.text_input("Insira o ID da bicicleta", ""),
-        "data": st.text_input("Insira a data do aluguel", ""),
+        "id_usuario": st.text_input("Insira o ID do usuário", ""),
+        "id_bike": st.text_input("Insira o ID da bicicleta", ""),
+        "data": st.text_input("Insira a data do empréstimo", ""),
     }
 
     if st.button("Criar Empréstimo"):
-        response1 =  requests.get(f'{url}/usuarios/{emps["user_id"]}')
-        response2 = requests.get(f'{url}/bikes/{emps["bike_id"]}')
+        response1 =  requests.get(f'{url}/usuarios/{emps["id_usuario"]}')
+        response2 = requests.get(f'{url}/bikes/{emps["id_usuario"]}')
         if response1.status_code != 200 and response2.status_code != 200:
-            st.error("Erro ao criar empréstimo.")
+             st.error("Usuario ou bike não localizado.")
         else:
-            response = requests.post(f'{url}/emprestimos/usuarios/{emps["user_id"]}/bikes/{emps["bike_id"]}', json=emps)
+            response = requests.post(f'{url}/emprestimos', json=emps)
+            print(response.status_code)
             if response.status_code == 201:
                 st.success("Empréstimo criado com sucesso.")
-            else:
-                st.error("Erro ao criar empréstimo.")
+
+
+
 
 def delete_emps():
     id = st.text_input("Insira o ID do empréstimo", "")
     if st.button("Deletar"):
         response = requests.delete(f'{url}/emprestimos/{id}')
+        print(response.status_code)
         if response.status_code == 200:
             st.success("Empréstimo deletado com sucesso.")
         else:
             st.error("Erro ao deletar empréstimo.")
     
+##############################################################################################################################################
+
+#SIDEBAR PARA NAVEGAÇÃO
 
 def sidebar_layout():
     st.sidebar.title("Navegação")
-    page = st.sidebar.radio("Escolha a página", ["Todos os Usuários", "Usuário por ID", "Criar Usuário", "Todas as Bicicletas", "Bicicleta por ID", "Todos os Empréstimos", "Empréstimo por ID", "Criar Empréstimo", "Atualizar Usuário", "Atualizar Bicicleta", "Apagar Empréstimo"])
+    page = st.sidebar.radio("Escolha a página", ["Todos os Usuários", "Usuário por ID", "Criar Usuário", "Atualizar Usuário", "Todas as Bicicletas", "Bicicleta por ID","Criar Bicicleta","Atualizar Bicicleta", "Todos os Empréstimos", "Empréstimo por ID", "Criar Empréstimo",   "Apagar Empréstimo"])
 
     if page == "Todos os Usuários":
         all_users()
@@ -172,6 +189,8 @@ def sidebar_layout():
         bike_id = st.text_input("Insira o ID da bicicleta", "")
         if st.button("Buscar"):
             get_bike_by_id(bike_id)
+    elif page == "Criar Bicicleta":
+        create_bike()
     elif page == "Todos os Empréstimos":
         all_emps()
     elif page == "Empréstimo por ID":
